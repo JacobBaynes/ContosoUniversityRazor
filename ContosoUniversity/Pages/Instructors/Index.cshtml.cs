@@ -28,11 +28,13 @@ namespace ContosoUniversity.Pages.Instructors
                 .Include(i => i.CourseAssignments)
                     .ThenInclude(i => i.Course)
                         .ThenInclude(i => i.Department)
-                .Include(i => i.CourseAssignments)
-                    .ThenInclude(i => i.Course)
-                        .ThenInclude(i => i.Enrollments)
-                            .ThenInclude(i => i.Student)
-                .AsNoTracking()
+
+            // ** Eager Loading
+                //.Include(i => i.CourseAssignments)
+                //    .ThenInclude(i => i.Course)
+                //        .ThenInclude(i => i.Enrollments)
+                //            .ThenInclude(i => i.Student)
+                //.AsNoTracking()
                 .OrderBy(i => i.LastName)
                 .ToListAsync();
 
@@ -47,8 +49,14 @@ namespace ContosoUniversity.Pages.Instructors
             if (courseID != null)
             {
                 CourseID = courseID.Value;
-                var selectedCourse = InstructorData.Courses
+                var selectedCourse = InstructorData.Courses 
                     .Where(x => x.CourseID == courseID).Single();
+                // ** Explicit loading
+                await _context.Entry(selectedCourse).Collection(x => x.Enrollments).LoadAsync();
+                foreach (Enrollment enrollment in selectedCourse.Enrollments)
+                {
+                    await _context.Entry(enrollment).Reference(x => x.Student).LoadAsync();
+                }
                 InstructorData.Enrollments = selectedCourse.Enrollments;
             }
         }
